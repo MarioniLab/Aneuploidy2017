@@ -1,0 +1,251 @@
+---
+title: scploid Package Usage Guide
+author: "Jonathan Griffiths"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  BiocStyle::html_document:
+    code_folding: show
+---
+
+This document describes the usage of the `scploid` package to call aneuploidies from single-cell data.
+
+We will load some useful packages first:
+
+
+```{r load_packages, message=FALSE}
+
+library(scploid)
+
+#here() allows us to point to files in a robust way
+library(here)
+fold = here()
+
+#biomaRt allows us to get the gene locations
+library(biomaRt)
+
+#knitr tidies up some output for this document
+library(knitr)
+
+#BiocStyle is a pretty R markdown output
+library(BiocStyle)
+
+```
+
+To install the package, you can run:
+
+`library(devtools)`
+`devtools::install_github("MarioniLab/Aneuploidy2017", subdir = "package")`
+
+First, we load in the data - we use the G&T-seq 8-cell stage embryos that we considered in the paper:
+
+```{r load_data}
+
+counts = read.table(
+  paste0(fold, "/raw_data/gt_8cell_counts.txt"),
+  header = T,
+  row.names = 1
+)
+
+#tidy up the cell names
+colnames(counts) = paste0("cell_", 1:ncol(counts))
+
+
+```
+
+The count table is formatted with cells as the columns, and genes as the rows, shown in Table \@ref(tab:show-counts):
+
+```{r show-counts, echo=FALSE}
+
+kable(counts[1:5, 1:5], caption = "The first five rows and columns of the counts matrix.")
+
+```
+
+We now need to identify the chromosome that each gene lies on. We do this with biomaRt.
+
+```{r biomart}
+
+mouse_ensembl = useMart("ensembl")
+mouse_ensembl = useDataset("mmusculus_gene_ensembl", 
+                           mart = mouse_ensembl)
+
+gene_table = getBM(
+  attributes = c("ensembl_gene_id", "chromosome_name"),
+  mart = mouse_ensembl,
+  values = as.character(rownames(counts)),
+  filters = "ensembl_gene_id"
+)
+
+```
+
+We want to assess autosomal chromosomes, so we retain only genes on these.
+
+```{r subset-chr}
+
+gene_table = gene_table[gene_table$chromosome_name %in% 1:19, ]
+counts = counts[gene_table$ensembl_gene_id, ]
+
+```
+
+Finally, we can make the `ploidytest` object, which holds data and performs aneuploidy calculations for us. We need:
+
+* The counts table (integer matrix)
+
+* The gene names (chracter vector)
+
+* The gene chromosomes (character or numeric vector)
+
+* Cell names (character vector)
+
+* Cell groups for analysis to avoid DE-driven effects (character vector)
+
+We make one such object below:
+
+
+```{r ploidytest}
+
+ploidytest = makeAneu(counts = as.matrix(counts), 
+                      genes = gene_table$ensembl_gene_id, 
+                      chrs = gene_table$chromosome_name, 
+                      cellNames = colnames(counts), 
+                      cellGroups = rep("group_1", ncol(counts)))
+
+```
+
+The method only considers genes with median expression above 50 CPM. We can check to see if there is any structure in these genes that we might have missed, by plotting the first two components of a PCA. The PCA is performed on centred log-transformed CPM. You can discretely colour this plot any way you like, in case there are any covariates you would like to check for confounding. We show this using random colours in Figure \@ref(fig:pca).
+
+```{r pca, fig.cap="The first two principal components of CPM counts, coloured randomly."}
+
+random_colours = round(runif(ncol(counts), 0.5, 4.5))
+
+plotPCA(ploidytest, cols = random_colours)
+
+```
+
+If there is any covariate-driven structure, make the ploidytest object again and change the cell groupings. Here, we can see two cells that behave very differently to the others: these were QC-fail cells.
+
+You may now want to change some of the parameters of the aneuploidy calling approach. These are:
+
+* `p.thresh`: post FDR correction p-value for aneuploidy calling (default 0.1)
+
+* `min.deviation`: minimum deviation of $s_{ij}$ from 1 for aneuploidy calling (default 0.2, i.e. $0.8<s_{ij}<1.2$ will never be considered as aneuploid)
+
+* `center.cells`: logical value to allow or prevent within-cell $s_{ij}$ centering (default TRUE)
+
+* `min.median`: minimum CPM median value for gene retention for analysis (default 50)
+
+* `extreme.gene.thresh`: maximum a_{gij} that one gene may show before removal as outlier (default 10, to exclude no genes set to a very high value e.g. `Inf`)
+
+You can check a parameter using `getParam`, like so:
+
+```{r getparam}
+
+getParam(ploidytest, 
+         param_name = "p.thresh")
+
+```
+
+And change them using `setParam`:
+
+```{r setParam}
+
+ploidytest = setParam(ploidytest, 
+                      param_name = "center.cells", 
+                      param_value = FALSE)
+
+```
+
+The `extreme.gene.thresh` parameter is designed to exclude genes that show a large amount of differential expression within cell groupings. This differential expression could contribute artefactually high scores to aneuploidy calls. You can review the scores of genes in groups using the `getMaxA()` function:
+
+```{r maxa}
+
+max_a = getMaxA(ploidytest)
+head(max_a)
+
+```
+
+If you would like to exclude genes like this, you can set the `extreme.gene.thresh` parameter. The `print` argument can provide feedback to you about how many genes are being removed. If print is TRUE, the number of genes on each chromosome that will be excluded by the extreme gene cutoff is printed, separately for each cell group defined:
+
+```{r setParam-print}
+
+ploidytest = setParam(ploidytest, 
+                      param_name = "extreme.gene.thresh", 
+                      param_value = 8,
+                      print = TRUE)
+
+```
+
+This may help you prevent the exclusion of too many genes by setting the cutoff too low.
+
+Once you are happy with your setup, you can run the aneuploidy calculations.
+
+
+```{r doaneu}
+
+ploidytest = doAneu(ploidytest)
+
+```
+
+You can look at the scores for each chromosome using `getScores`, which presents all chromosomes tested. Columns names are:
+
+* `chr`: Chromosome tested
+
+* `cell`: Cell tested
+
+* `z`: Z-score calculated from $s_{ij}$
+
+* `score`: Value of $s_{ij}$
+
+* `p`: Raw p-value from Z-score
+
+* `p.adj`: FDR-adjusted p-value
+
+* `monosomy`: If expression is depressed compared to other cells, this is TRUE, otherwise FALSE. It does not indicate a called aneuploidy for this function.
+
+The head of the scores table is shown in Table \@ref(tab:getscores).
+
+```{r getscores, echo=FALSE}
+
+kable(head(getScores(ploidytest)), caption = "Scores of aneuploidy assessment.")
+
+
+```
+
+To look at just the called aneuploidies, use `getHits`. Here, only the chromosomes that were p-value and $s_{ij}$-deviant are returned. The head of the "hits" table is shown in Table \@ref(tab:gethits).
+
+
+```{r gethits, echo=FALSE}
+
+kable(head(getHits(ploidytest)), caption = "Scores of called aneuploid chromosomes.")
+
+```
+
+Finally, it is important to check whether the data are of high enough quality to apply this method. The metrics discussed in the Supplementary Report to the paper (section *Testing Data Suitability for the Method*) are calculated when the ploidytest object is made. These metrics are:
+
+* `ngenes`: The number of genes that qualify for aneuploidy assessment
+
+* `zeros`: The fraction of 0 counts for each gene that qualifies for aneuploidy assessment
+
+* `residual`: residual score vs. G&T-seq 8-cell stage embryos (see Supplemental Report for details.)
+
+You can access these using the `getMetrics` function:
+
+```{r metrics}
+
+metrics = getMetrics(ploidytest)
+#access each one by e.g. metrics$ngenes
+
+```
+
+As an example from this data, the number of genes considered is `r metrics$ngenes`.
+
+There are two ways to interpret these values: either by direct comparison to the graphs shown in the Supplementary Report (section *Testing Data Suitability for the Method*); or by using the `assessMetrics` function.
+
+Please note that the `assessMetrics` function only provides broad-stroke evaluation of the metrics. There may be other confounding factors in your data that these metrics do not capture: before using the aneuploidy-calling results, you should show to your own satisfaction that you have accounted for these. Finally, `assessMetrics` assumes default parameter choice, particularly for `min.median`.
+
+The output from `assessMetrics` on this data is shown in Table \@ref(tab:assess)
+
+```{r assess, echo=FALSE}
+
+kable(data.frame(row.names = names(assessMetrics(ploidytest)), result = assessMetrics(ploidytest)), caption = "Simple quality assessment calls for this dataset")
+
+```

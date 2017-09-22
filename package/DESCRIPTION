@@ -1,0 +1,13 @@
+Package: scploid
+Title: Single Cell RNA-seq Aneuploidy Caller
+Version: 0.9
+Authors@R: person("Jonathan", "Griffiths", email = "jag216@cam.ac.uk", role = c("aut", "cre"))
+Description: scploid is a small R package that calls aneuploid chromosomes from single-cell RNAseq data. The algorith is described in the paper "Mosaic autosomal aneuploidies are detectable from single-cell RNAseq data", for which this package was written.
+Depends: R (>= 3.0.0)
+License: GPL-v3
+Encoding: UTF-8
+LazyData: true
+Imports: 
+	reshape2,
+	ggplot2
+RoxygenNote: 6.0.1
