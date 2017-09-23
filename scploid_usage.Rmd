@@ -133,7 +133,7 @@ You may now want to change some of the parameters of the aneuploidy calling appr
 
 * `min.median`: minimum CPM median value for gene retention for analysis (default 50)
 
-* `extreme.gene.thresh`: maximum a_{gij} that one gene may show before removal as outlier (default 10, to exclude no genes set to a very high value e.g. `Inf`)
+* `extreme.gene.thresh`: maximum $a_{gij}$ that one gene may show before removal as outlier (default 10, to exclude no genes set to a very high value e.g. `Inf`)
 
 You can check a parameter using `getParam`, like so:
 
