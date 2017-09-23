@@ -21,6 +21,7 @@ One further shell script, `get_data.sh` will download the raw data to this folde
 Files for the *scploid* R package can be found in the `package` folder. However, it is easiest to install the package from R by installing the `devtools` package and using these commands:
 
 `library(devtools)`
+
 `devtools::install_github("MarioniLab/Aneuploidy2017", subdir = "package")`
 
 A usage guide for the package is present, called `scploid_usage.html`. This file walks a user through the steps they would want to take in order to make an aneuploidy assessment on their own data.
