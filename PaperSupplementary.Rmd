@@ -2558,7 +2558,9 @@ dd = lm(deng_tab$logFC ~ deng_tab$diff)
 
 ```
 
-The copy number difference has no significant effect in the mESC data (p = `r format(summary(dm)$coefficients[2,4], digits = 3)`, linear model), though is significant in the Deng data (p = `r format(summary(dd)$coefficients[2,4], digits = 2)`, linear model). However, here the coefficient value is extremely small (`r format(coef(dd)[2], digits = 3)` compared to intercept of `r format(coef(dd)[1], digits = 3)`).
+We considered whether the copy number difference was having any effect by regressing  the log2(FC) values against the difference to complete normal ploidy (i.e. 2 copies in all cells) for each gene using ordinary least squares.
+
+The copy number difference has no significant effect in the mESC data (p = `r format(summary(dm)$coefficients[2,4], digits = 3)`), though is significant in the Deng data (p = `r format(summary(dd)$coefficients[2,4], digits = 2)`). However, here the coefficient value is extremely small (`r format(coef(dd)[2], digits = 3)` compared to intercept of `r format(coef(dd)[1], digits = 3)`).
 
 One gene is upregulated in the G&T-seq embryos: Snora68, a nucleolar RNA.
 
@@ -2575,7 +2577,7 @@ Of these genes, some are particularly notable:
 * **[Txnip](http://www.ensembl.org/Mus_musculus/Gene/Summary?g=ENSMUSG00000038393;r=3:96557957-96561883)** is the mouse ortholog of **TXNIP**, a human gene which is [downregulated in cancers and whose overexpression promotes G1 cell-cycle arrest](https://www.spandidos-publications.com/ijo/32/2/377)
 * **[Calnexin (Canx)](http://www.ensembl.org/Mus_musculus/Gene/Summary?db=core;g=ENSMUSG00000020368;r=11:50928175-50968057)** is a protein chaperone, which operates as a part of the unfolded protein response (UPR). Activation of this response has been [associated with aneuploid cells](https://www.nature.com/articles/ncomms8668).
 * **[Pdia3](http://www.ensembl.org/Mus_musculus/Gene/Summary?g=ENSMUSG00000027248;r=2:121413775-121438687)** [interacts with calnexin](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1170563/), and therefore is also likely to play a role in the UPR.
-* **[Sdf2]http://www.ensembl.org/Mus_musculus/Gene/Summary?g=ENSMUSG00000002064;r=11:78245746-78255496)** also acts as [part of the UPR](http://www.bioone.org/doi/abs/10.1095/biolreprod.115.138164), and differential expression of SDF2 has [been linked to aneuploidy incidence in human oocytes](https://academic.oup.com/molehr/article/16/8/570/1000474/Transcriptomic-profiling-of-human-oocytes).
+* **[Sdf2](http://www.ensembl.org/Mus_musculus/Gene/Summary?g=ENSMUSG00000002064;r=11:78245746-78255496)** also acts as [part of the UPR](http://www.bioone.org/doi/abs/10.1095/biolreprod.115.138164), and differential expression of SDF2 has [been linked to aneuploidy incidence in human oocytes](https://academic.oup.com/molehr/article/16/8/570/1000474/Transcriptomic-profiling-of-human-oocytes).
 
 
 There were `r length(down_intersect)` shared downregulated genes.
@@ -2974,6 +2976,8 @@ main_df = var_df
 main_df$mean = mean_df$value
 names(main_df) = c("sd", "od", "mean")
 
+main_df = main_df[sample(nrow(main_df), nrow(main_df), replace = FALSE),]
+
 sim_palette = rev(brewer.pal(4, "RdYlBu"))
 
 #gradient data
@@ -2982,7 +2986,7 @@ names(grads) = c("intercept", "slope")
 grads$cols = c("rev", "bl")
 
 p = ggplot(data = main_df, mapping = aes(x=mean, y = sd, col = od)) +
-  geom_point(alpha = 0.3) +
+  geom_point(alpha = 1) +
   scale_x_log10(breaks = c(50, 250, 1000, 5000), limits = c(40,1000)) + 
   scale_y_log10(breaks = c(50, 250, 1000, 5000), limits = c(20,2000)) +
   #geom_smooth(method = "lm", se = FALSE, fullrange = TRUE, size = 0.5, lty = "twodash") +

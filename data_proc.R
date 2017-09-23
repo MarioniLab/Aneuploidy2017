@@ -1,6 +1,9 @@
 # This script turns counts data into R objects that are saved in .RData files
 # These files are read into the Rmd file for analysis
 
+if(!exists(paste0(folder_location, "/proc_data")))
+  dir.create(paste0(folder_location, "/proc_data"))
+
 # LOAD AND PROCESS G&T DATA ####
 
 raw_counts = read.table(
