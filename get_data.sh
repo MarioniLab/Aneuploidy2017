@@ -1,7 +1,7 @@
 #!/usr/bin/bash
-if [ ! -e "aneu_report.html" ]
+if [ ! -e "PaperSupplementary.html" ]
 	then
-		echo "There is no aneu_report.html file here - are you running the script from the right place?"
+		echo "There is no PaperSupplementary.html file here - are you running the script from the right place?"
 		echo "If you still want to download here, run 'touch aneu_report.html' and then this script again."
 	else
 		if [ ! -d "raw_data" ]
