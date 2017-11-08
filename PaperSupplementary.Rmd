@@ -25,11 +25,11 @@ plot_folder = paste0(folder_location, "plots")
 source(paste0(folder_location, "aneu_functions.R"))
 
 # To process:
-source(paste0(folder_location, "data_proc.R"), echo = FALSE)
+# source(paste0(folder_location, "data_proc.R"), echo = FALSE)
 
 # To load:
-# for(file in dir(paste0(folder_location, "proc_data/"), full.names = TRUE))
-#   load(file)
+for(file in dir(paste0(folder_location, "proc_data/"), full.names = TRUE))
+  load(file)
 
 
 #stop edgeR/scploid getCounts() issue

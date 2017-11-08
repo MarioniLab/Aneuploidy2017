@@ -34,8 +34,8 @@ Rendering of the report is computationally intensive, using ~60GB of RAM and 12 
 
 If you wish to compile the report, you will need to:
 
-1. Run `get_data.sh` to download the raw data.
+* Ensure the packages are installed that are loaded at the top of the `aneu_functions.R` file (best achieved using the `BiocInstaller` package).
 
-2. Ensure the packages are installed that are loaded at the top of the `aneu_functions.R` file (best achieved using the `BiocInstaller` package).
+* Run in R the command `rmarkdown::render(aneu_report.Rmd)` (recommended on a compute cluster; example scripts are present in the `cluster` folder)
 
-3. Run in R the command `rmarkdown::render(aneu_report.Rmd)` (recommended on a compute cluster; example scripts are present in the `cluster` folder)
+The processed data (mostly *scploid* R objects) are available in this repo. Raw data may be downloaded using the `get_data.sh` script. By default, the `data_proc.R` script is disabled from running in the Rmd - you will need to un-comment the `source()` command in the first code chunk, and comment-out the data loading step if you would like to run this from the Rmd script.
