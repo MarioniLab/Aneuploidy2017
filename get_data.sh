@@ -8,12 +8,12 @@ if [ ! -e "PaperSupplementary.html" ]
 
 
 		echo "Getting processed data"
-		curl -k https://jmlab-gitlab.cruk.cam.ac.uk/Jonny/Aneuploidy2017Data/raw/master/aneu_proc.tar.gz > aneu_proc.tar.gz
+		curl https://jmlab-gitlab.cruk.cam.ac.uk/Jonny/Aneuploidy2017Data/raw/master/aneu_proc.tar.gz > aneu_proc.tar.gz
 		echo "Unzipping processed data"
 		tar -xzf aneu_proc.tar.gz
 
 		echo "Getting raw data"
-		curl -k https://jmlab-gitlab.cruk.cam.ac.uk/Jonny/Aneuploidy2017Data/raw/master/aneu_raw.tar.gz > aneu_raw.tar.gz
+		curl https://jmlab-gitlab.cruk.cam.ac.uk/Jonny/Aneuploidy2017Data/raw/master/aneu_raw.tar.gz > aneu_raw.tar.gz
 		echo "Unzipping raw data"
 		tar -xzf aneu_raw.tar.gz
 
