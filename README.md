@@ -14,7 +14,7 @@ There are three R scripts that are used to generate this report:
 
 * `data_proc.R` is a script that converts raw data into a processed set for the analyses.
 
-One further shell script, `get_data.sh` will download the raw data to this folder. You must have installed or have access tp `wget` for this download, and you must have the folder containing this repo set as your working directory.
+One further shell script, `get_data.sh` will download the raw data to this folder. You must have the folder containing this repo set as your working directory to download the data.
 
 ### *scploid* R package
 
